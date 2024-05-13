@@ -1,14 +1,16 @@
 package com.parkit.parkingsystem;
 
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import com.parkit.parkingsystem.constants.Fare;
 import com.parkit.parkingsystem.constants.ParkingType;
 import com.parkit.parkingsystem.model.ParkingSpot;
 import com.parkit.parkingsystem.model.Ticket;
 import com.parkit.parkingsystem.service.FareCalculatorService;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Date;
@@ -155,7 +157,7 @@ public class FareCalculatorServiceTest {
     @Test
     public void calculateFareCarWithTimeLessThanFreeDuration(){
         Date inTime = new Date();
-        inTime.setTime( System.currentTimeMillis() - ( Fare.FREE_DURATION_IN_MINUTES/2 * 60 * 1000) );//24 hours parking time should give 24 * parking fare per hour
+        inTime.setTime( System.currentTimeMillis() - ( Fare.FREE_DURATION_IN_MINUTES/2 * 60 * 1000) );//2 times less parking should give 0 fare
         Date outTime = new Date();
         ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false);
 
@@ -169,7 +171,7 @@ public class FareCalculatorServiceTest {
     @Test
     public void calculateFareBikeWithTimeLessThanFreeDuration(){
         Date inTime = new Date();
-        inTime.setTime( System.currentTimeMillis() - ( Fare.FREE_DURATION_IN_MINUTES/2 * 60 * 1000) );//24 hours parking time should give 24 * parking fare per hour
+        inTime.setTime( System.currentTimeMillis() - ( Fare.FREE_DURATION_IN_MINUTES/2 * 60 * 1000) );//2 times less parking should give 0 fare
         Date outTime = new Date();
         ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.BIKE,false);
 
@@ -178,6 +180,38 @@ public class FareCalculatorServiceTest {
         ticket.setParkingSpot(parkingSpot);
         fareCalculatorService.calculateFare(ticket);
         assertEquals( (0.0) , ticket.getPrice());
+    }
+    
+    @Test
+    public void calculateFareCarWithDiscountDescription(){
+        Date inTime = new Date();
+        inTime.setTime( System.currentTimeMillis() - ( 2 * 60 * 60 * 1000) );//2 hours parking time with reduction should give 2 * 0.95 * parking fare per hour
+        Date outTime = new Date();
+        ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false);
+
+        ticket.setInTime(inTime);
+        ticket.setOutTime(outTime);
+        ticket.setParkingSpot(parkingSpot);
+        ticket.setFareReduction(true);
+        fareCalculatorService.calculateFare(ticket,true);
+        assertThat(ticket.getPrice()).isEqualTo((2 * (1-Fare.DISCOUNT_VALUE) * Fare.CAR_RATE_PER_HOUR));
+        
+    }
+    
+    @Test
+    public void calculateFareBikeWithDiscountDescription(){
+        Date inTime = new Date();
+        inTime.setTime( System.currentTimeMillis() - ( 2 * 60 * 60 * 1000) );//2 hours parking time with reduction should give 2 * 0.95 * parking fare per hour
+        Date outTime = new Date();
+        ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.BIKE,false);
+
+        ticket.setInTime(inTime);
+        ticket.setOutTime(outTime);
+        ticket.setParkingSpot(parkingSpot);
+        ticket.setFareReduction(true);
+        fareCalculatorService.calculateFare(ticket,true);
+        assertThat(ticket.getPrice()).isEqualTo((2 * (1-Fare.DISCOUNT_VALUE) * Fare.BIKE_RATE_PER_HOUR));
+    
     }
 
 }
