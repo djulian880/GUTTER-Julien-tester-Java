@@ -75,6 +75,7 @@ public class ParkingDataBaseIT {
 			if (rs.next()) {
 				assertThat(rs.getInt(1)).isEqualTo(1);
 			}
+			dataBaseTestConfig.closeResultSet(rs);
 			dataBaseTestConfig.closePreparedStatement(ps);
 
 			final PreparedStatement ps2 = con.prepareStatement(
@@ -86,7 +87,7 @@ public class ParkingDataBaseIT {
 				assertThat(rs2.getBoolean(1)).isEqualTo(false);
 
 			}
-			dataBaseTestConfig.closeResultSet(rs);
+			dataBaseTestConfig.closeResultSet(rs2);
 			dataBaseTestConfig.closePreparedStatement(ps2);
 		} catch (final Exception ex) {
 			System.out.println("Error setting testParkingACar");
@@ -129,6 +130,7 @@ public class ParkingDataBaseIT {
 				assertThat(rs2.getTimestamp(2)).isCloseTo(new Timestamp(new Date().getTime()), 10000);
 
 			}
+			dataBaseTestConfig.closePreparedStatement(ps2);
 			dataBaseTestConfig.closeResultSet(rs2);
 
 		} catch (final Exception ex) {
