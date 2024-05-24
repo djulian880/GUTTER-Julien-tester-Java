@@ -139,5 +139,62 @@ public class ParkingDataBaseIT {
 		}
 
 	}
+	
+	@Test
+	// check that a fare with discount price generated is populated correctly in the
+	// database
+	public void testParkingLotExitRecurringUser() {
+
+		final ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
+		parkingService.processIncomingVehicle();
+		parkingService.processExitingVehicle();
+		parkingService.processIncomingVehicle();
+		
+		
+
+		Connection con = null;
+		try {
+			con = dataBaseTestConfig.getConnection();
+			
+			final Date newInTime1 = new Date();
+			newInTime1.setTime(System.currentTimeMillis() - 25 * 60 * 1000);
+			final PreparedStatement ps0 = con
+					.prepareStatement("update ticket set IN_TIME=? where VEHICLE_REG_NUMBER='ABCDEF' AND ID=1");
+			ps0.setTimestamp(1, new Timestamp(newInTime1.getTime()));
+			ps0.execute();
+
+			dataBaseTestConfig.closePreparedStatement(ps0);
+			
+			
+			final Date newInTime2 = new Date();
+			newInTime2.setTime(System.currentTimeMillis() - 60 * 60 * 1000);
+			final PreparedStatement ps1 = con
+					.prepareStatement("update ticket set IN_TIME=? where VEHICLE_REG_NUMBER='ABCDEF' AND ID=2");
+			ps1.setTimestamp(1, new Timestamp(newInTime2.getTime()));
+			ps1.execute();
+
+			dataBaseTestConfig.closePreparedStatement(ps1);
+
+			parkingService.processExitingVehicle();
+
+			final PreparedStatement ps2 = con
+					.prepareStatement("select price from ticket where vehicle_reg_number='ABCDEF' and id=2");
+			ps2.execute();
+			final ResultSet rs2 = ps2.executeQuery();
+			if (rs2.next()) {
+				assertThat(rs2.getDouble(1)).isEqualTo(Fare.CAR_RATE_PER_HOUR*(1-Fare.DISCOUNT_VALUE));
+
+			}
+			dataBaseTestConfig.closeResultSet(rs2);
+
+		} catch (final Exception ex) {
+			System.out.println("Error setting testParkingLotExitRecurringUser");
+			ex.printStackTrace();
+		} finally {
+			dataBaseTestConfig.closeConnection(con);
+		}
+
+	}
+	
 
 }
